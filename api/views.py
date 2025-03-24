@@ -10,7 +10,7 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import GeneratedLog
+from .models import GeneratedLog, TripLog
 from django.views import View
 from openrouteservice import convert
 
@@ -47,6 +47,7 @@ class RouteAPIView(APIView):
             if not all([current_coords, pickup_coords, dropoff_coords]):
                 return Response({"error": "Failed to get coordinates for one or more locations"}, status=status.HTTP_400_BAD_REQUEST)
 
+            # Request route data
             route_uri = "https://api.openrouteservice.org/v2/directions/driving-car"
             route_headers = {'Authorization': ors_api_key}
             route_json = {"coordinates": [current_coords, pickup_coords, dropoff_coords]}
@@ -61,6 +62,7 @@ class RouteAPIView(APIView):
 
             route_data = route_response.json()
 
+            # Extract route geometry
             try:
                 route_info = route_data['routes'][0]
                 if isinstance(route_info, dict) and 'geometry' in route_info:
@@ -72,35 +74,52 @@ class RouteAPIView(APIView):
             except Exception as e:
                 return Response({"error": f"Error processing route information: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-            fig, ax = plt.subplots(figsize=(12, 8))
-            categories = ['Off-Duty', 'On-Duty (Not Driving)', 'Driving']
-            colors = ['skyblue', 'orange', 'green']
-            day_log = [2 if i < 11 else 0 for i in range(24)]
+            # Extract distance
+            try:
+                distance_km = route_data['routes'][0]['summary']['distance'] / 1000  # Convert meters to km
+            except KeyError:
+                return Response({"error": "Failed to extract route distance"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-            for hour_index, activity in enumerate(day_log):
-                ax.barh(0, 1, left=hour_index, color=colors[activity])
+            # Estimate number of days based on distance
+            avg_speed_kmh = 60
+            estimated_hours = distance_km / avg_speed_kmh
+            num_days = max(1, int(estimated_hours / 24) + 1)
 
-            ax.set_yticks([0])
-            ax.set_yticklabels(['Day 1'])
-            ax.set_xticks(range(0, 25))
-            ax.set_xlabel('Hours of the Day')
-            ax.set_title('ELD Log Sheet')
-            plt.tight_layout()
+            log_images = []
 
-            buffer = BytesIO()
-            plt.savefig(buffer, format='png')
-            plt.close()
-            buffer.seek(0)
+            for day in range(num_days):
+                fig, ax = plt.subplots(figsize=(12, 8))
+                categories = ['Off-Duty', 'On-Duty (Not Driving)', 'Driving']
+                colors = ['skyblue', 'orange', 'green']
+                day_log = [2 if i < 11 else 0 for i in range(24)]
 
-            log_image = GeneratedLog()
-            log_image.image.save('eld_log.png', ContentFile(buffer.read()))
-            log_image.save()
+                for hour_index, activity in enumerate(day_log):
+                    ax.barh(0, 1, left=hour_index, color=colors[activity])
+
+                ax.set_yticks([0])
+                ax.set_yticklabels([f'Day {day + 1}'])
+                ax.set_xticks(range(0, 25))
+                ax.set_xlabel('Hours of the Day')
+                ax.set_title(f'ELD Log Sheet - Day {day + 1}')
+                plt.tight_layout()
+
+                buffer = BytesIO()
+                plt.savefig(buffer, format='png')
+                plt.close()
+                buffer.seek(0)
+
+                log_image = GeneratedLog()
+                log_image.image.save(f'eld_log_day_{day + 1}.png', ContentFile(buffer.read()))
+                log_image.save()
+
+                log_images.append(request.build_absolute_uri(log_image.image.url))
 
             return Response({
-                "image_url": request.build_absolute_uri(log_image.image.url),
+                "image_urls": log_images,
                 "geometry": {
                     "coordinates": coordinates
-                }
+                },
+                "num_days": num_days
             })
 
         except Exception as e:

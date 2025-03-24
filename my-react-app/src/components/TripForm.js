@@ -10,6 +10,7 @@ const TripForm = () => {
     });
 
     const [routeData, setRouteData] = useState(null);
+    const [imageUrls, setImageUrls] = useState([]);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
 
@@ -24,6 +25,7 @@ const TripForm = () => {
         e.preventDefault();
         setError(null);
         setRouteData(null);
+        setImageUrls([]);
         setLoading(true);
 
         try {
@@ -33,15 +35,18 @@ const TripForm = () => {
             if (response.data.geometry && response.data.geometry.coordinates) {
                 setRouteData(response.data);
             } else {
-                console.error("Route data is missing or invalid.");
                 setError("Failed to load route data. Please try again.");
+            }
+
+            if (response.data.image_urls && response.data.image_urls.length > 0) {
+                setImageUrls(response.data.image_urls);
             }
         } catch (error) {
             console.error('Error:', error);
             if (error.response && error.response.data.error) {
                 setError(error.response.data.error);
             } else {
-                setError('Something went wrong. Please try again.');
+                setError("Something went wrong. Please try again.");
             }
         } finally {
             setLoading(false);
@@ -53,48 +58,29 @@ const TripForm = () => {
             <form onSubmit={handleSubmit}>
                 <div>
                     <label>Current Location:</label>
-                    <input 
-                        type="text" 
-                        name="current_location" 
-                        value={formData.current_location} 
-                        onChange={handleChange} 
-                        required
-                    />
+                    <input type="text" name="current_location" value={formData.current_location} onChange={handleChange} required />
                 </div>
-
                 <div>
                     <label>Pickup Location:</label>
-                    <input 
-                        type="text" 
-                        name="pickup_location" 
-                        value={formData.pickup_location} 
-                        onChange={handleChange} 
-                        required
-                    />
+                    <input type="text" name="pickup_location" value={formData.pickup_location} onChange={handleChange} required />
                 </div>
-
                 <div>
                     <label>Dropoff Location:</label>
-                    <input 
-                        type="text" 
-                        name="dropoff_location" 
-                        value={formData.dropoff_location} 
-                        onChange={handleChange} 
-                        required
-                    />
+                    <input type="text" name="dropoff_location" value={formData.dropoff_location} onChange={handleChange} required />
                 </div>
-
-                <button type="submit" disabled={loading}>
-                    {loading ? "Generating Route..." : "Generate Route"}
-                </button>
+                <button type="submit" disabled={loading}>{loading ? "Generating Route..." : "Generate Route"}</button>
             </form>
 
             {error && <div style={{color: 'red'}}>{error}</div>}
 
-            {routeData && (
+            {routeData && <TripMap routeData={routeData} />}
+
+            {imageUrls.length > 0 && (
                 <div>
-                    <h3>Route Map:</h3>
-                    <TripMap routeData={routeData} />
+                    <h3>Generated ELD Logs:</h3>
+                    {imageUrls.map((url, index) => (
+                        <img key={index} src={url} alt={`ELD Log ${index + 1}`} style={{ maxWidth: "100%", height: "auto" }} />
+                    ))}
                 </div>
             )}
         </div>
