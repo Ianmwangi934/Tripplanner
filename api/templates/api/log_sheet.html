@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELD Log Sheet</title>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; }
+        canvas { border: 2px solid #000; cursor: crosshair; }
+        #controls { margin: 10px; }
+    </style>
+</head>
+<body>
+    <h2>Interactive ELD Log Sheet</h2>
+
+    <!-- Activity Selection -->
+    <div id="controls">
+        <label for="activity">Select Activity: </label>
+        <select id="activity">
+            <option value="green">Driving</option>
+            <option value="blue">On-Duty (Not Driving)</option>
+            <option value="red">Off-Duty</option>
+        </select>
+        <button onclick="clearCanvas()">Undo</button>
+        <button onclick="saveLogSheet()">Save</button>
+    </div>
+
+    <!-- Log Sheet + Drawing Canvas -->
+    <div style="position: relative; display: inline-block;">
+        <img id="logSheet" src="{{ log_image_url }}" style="display: block;">
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const logSheet = document.getElementById("logSheet");
+
+        // Resize canvas to match the log sheet
+        function resizeCanvas() {
+            canvas.width = logSheet.width;
+            canvas.height = logSheet.height;
+        }
+
+        logSheet.onload = resizeCanvas;
+
+        let drawing = false;
+        let activityColor = document.getElementById("activity").value;
+
+        document.getElementById("activity").addEventListener("change", function() {
+            activityColor = this.value;
+        });
+
+        canvas.addEventListener("mousedown", () => drawing = true);
+        canvas.addEventListener("mouseup", () => drawing = false);
+        canvas.addEventListener("mousemove", draw);
+
+        function draw(event) {
+            if (!drawing) return;
+            ctx.strokeStyle = activityColor;
+            ctx.lineWidth = 5;
+            ctx.lineCap = "round";
+
+            ctx.lineTo(event.offsetX, event.offsetY);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(event.offsetX, event.offsetY);
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            resizeCanvas();
+        }
+
+        function saveLogSheet() {
+            const imageData = canvas.toDataURL("image/png");
+
+            fetch("/save-drawn-log/", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `image_data=${encodeURIComponent(imageData)}`
+            })
+            .then(response => response.json())
+            .then(data => alert(data.message))
+            .catch(error => console.error("Error saving log:", error));
+        }
+    </script>
+</body>
+</html>

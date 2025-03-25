@@ -14,7 +14,6 @@ from .models import GeneratedLog, TripLog
 from django.views import View
 from openrouteservice import convert
 
-
 class RouteAPIView(APIView):
     def post(self, request):
         data = request.data
@@ -86,25 +85,36 @@ class RouteAPIView(APIView):
             num_days = max(1, int(estimated_hours / 24) + 1)
 
             log_images = []
+            activity_labels = ["Off-Duty", "Sleeper Berth", "Driving", "On-Duty (Not Driving)"]
+            activity_colors = ["#FFD700", "#FFFF99", "#ADD8E6", "#FFA07A"]  # Yellow shades & light blue for sections
 
             for day in range(num_days):
-                fig, ax = plt.subplots(figsize=(12, 8))
-                categories = ['Off-Duty', 'On-Duty (Not Driving)', 'Driving']
-                colors = ['skyblue', 'orange', 'green']
-                day_log = [2 if i < 11 else 0 for i in range(24)]
+                fig, ax = plt.subplots(figsize=(12, 4))
 
-                for hour_index, activity in enumerate(day_log):
-                    ax.barh(0, 1, left=hour_index, color=colors[activity])
+                # Draw background color sections for each activity
+                for i, color in enumerate(activity_colors):
+                    ax.fill_betweenx([i, i + 1], 0, 24, color=color, alpha=0.6)
 
-                ax.set_yticks([0])
-                ax.set_yticklabels([f'Day {day + 1}'])
+                # Draw the grid lines
+                for hour in range(25):
+                    ax.axvline(hour, color="black", linewidth=1, linestyle="--")
+                for i in range(5):
+                    ax.axhline(i, color="black", linewidth=1)
+
+                # Set labels and title
+                ax.set_yticks([0.5, 1.5, 2.5, 3.5])
+                ax.set_yticklabels(activity_labels)
                 ax.set_xticks(range(0, 25))
-                ax.set_xlabel('Hours of the Day')
-                ax.set_title(f'ELD Log Sheet - Day {day + 1}')
+                ax.set_xticklabels([f"{i}:00" for i in range(25)])
+                ax.set_xlabel("Hours of the Day")
+                ax.set_title(f"ELD Log Sheet - Day {day + 1}")
+                ax.set_xlim(0, 24)
+                ax.set_ylim(0, 4)
                 plt.tight_layout()
 
+                # Save image to buffer
                 buffer = BytesIO()
-                plt.savefig(buffer, format='png')
+                plt.savefig(buffer, format='png', dpi=150)
                 plt.close()
                 buffer.seek(0)
 
@@ -124,7 +134,6 @@ class RouteAPIView(APIView):
 
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 class MapView(View):
     def get(self, request):
