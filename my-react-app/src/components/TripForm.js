@@ -12,6 +12,9 @@ const activityColors = {
 };
 
 const TripForm = () => {
+    useEffect(() => {
+        document.title = "Trip Planner | Route Management";
+    }, []);
     const [formData, setFormData] = useState({
         current_location: "",
         pickup_location: "",
@@ -105,6 +108,7 @@ const TripForm = () => {
                 canvasRefs.current[index] = fabricCanvas;
             };
         });
+        
 
         return () => {
             canvasRefs.current.forEach((fabricCanvas) => {
@@ -116,7 +120,10 @@ const TripForm = () => {
     }, [logSheets]);
 
     return (
+        
         <div className="container">
+            {/* Page Title */}
+      <h1 style={{ textAlign: "center", marginBottom: "20px" }}>Trip Planner</h1>
             <form className="trip-form" onSubmit={handleSubmit}>
                 <div className="form-group">
                     <label>Current Location:</label>

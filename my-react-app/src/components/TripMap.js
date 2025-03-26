@@ -1,43 +1,42 @@
-// TripMap.js
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
 const TripMap = ({ routeData }) => {
-    useEffect(() => {
-        // Ensure the map is not initialized multiple times
-        let map = L.map('map', { zoomControl: true });
+    const mapRef = useRef(null);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 18,
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+    useEffect(() => {
+        if (!mapRef.current) {
+            mapRef.current = L.map('map', { zoomControl: true });
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+                attribution: '© OpenStreetMap contributors',
+            }).addTo(mapRef.current);
+        }
 
         if (routeData && routeData.geometry && routeData.geometry.coordinates) {
             const coordinates = routeData.geometry.coordinates.map(coord => [coord[1], coord[0]]);
 
             // Fit the map to the route
             const bounds = L.latLngBounds(coordinates);
-            map.fitBounds(bounds);
+            mapRef.current.fitBounds(bounds);
 
             // Ensure the map resizes properly
             setTimeout(() => {
-                map.invalidateSize();
-            }, 200);
+                mapRef.current.invalidateSize();
+            }, 500);
 
             // Draw the route as a polyline
-            L.polyline(coordinates, { color: 'blue' }).addTo(map);
+            L.polyline(coordinates, { color: 'blue' }).addTo(mapRef.current);
 
             // Add markers for start and end points
             if (coordinates.length > 0) {
-                L.marker(coordinates[0]).addTo(map).bindPopup('Starting Point').openPopup();
-                L.marker(coordinates[coordinates.length - 1]).addTo(map).bindPopup('Destination').openPopup();
+                L.marker(coordinates[0]).addTo(mapRef.current).bindPopup('Starting Point').openPopup();
+                L.marker(coordinates[coordinates.length - 1]).addTo(mapRef.current).bindPopup('Destination').openPopup();
             }
         }
 
-        return () => {
-            map.remove();
-        };
     }, [routeData]);
 
     return (

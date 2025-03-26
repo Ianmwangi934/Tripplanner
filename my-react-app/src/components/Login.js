@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({ username: "", password: "" });
   const [message, setMessage] = useState("");
-  const navigate = useNavigate(); // Initialize useNavigate
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -12,7 +12,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     const response = await fetch("http://127.0.0.1:8000/api/login/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -20,11 +20,11 @@ const Login = () => {
     });
 
     const data = await response.json();
-    
+
     if (response.ok) {
-      localStorage.setItem("user", JSON.stringify(data)); // Store user info in localStorage
-      setMessage("Login successful. Redirecting...");
-      setTimeout(() => navigate("/trip-form"), 2000); // Redirect to TripForm.js after 2 seconds
+      localStorage.setItem("user", JSON.stringify(data));
+      setMessage("Login successful.");
+      setTimeout(() => navigate("/trip-form"), 1000); // Redirect to TripForm.js after 1 second
     } else {
       setMessage(data.error);
     }
@@ -39,6 +39,9 @@ const Login = () => {
         <button type="submit">Login</button>
       </form>
       <p>{message}</p>
+      
+      {/* Add Register Redirect Button */}
+      <p>Don't have an account? <button onClick={() => navigate("/register")} style={{ background: "none", border: "none", color: "blue", cursor: "pointer" }}>Register here</button></p>
     </div>
   );
 };
