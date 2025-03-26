@@ -5,7 +5,8 @@ import 'leaflet/dist/leaflet.css';
 
 const TripMap = ({ routeData }) => {
     useEffect(() => {
-        const map = L.map('map').setView([0, 0], 2);
+        // Ensure the map is not initialized multiple times
+        let map = L.map('map', { zoomControl: true });
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 18,
@@ -19,18 +20,18 @@ const TripMap = ({ routeData }) => {
             const bounds = L.latLngBounds(coordinates);
             map.fitBounds(bounds);
 
+            // Ensure the map resizes properly
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 200);
+
             // Draw the route as a polyline
             L.polyline(coordinates, { color: 'blue' }).addTo(map);
 
             // Add markers for start and end points
             if (coordinates.length > 0) {
-                L.marker(coordinates[0]).addTo(map)
-                    .bindPopup('Starting Point')
-                    .openPopup();
-
-                L.marker(coordinates[coordinates.length - 1]).addTo(map)
-                    .bindPopup('Destination')
-                    .openPopup();
+                L.marker(coordinates[0]).addTo(map).bindPopup('Starting Point').openPopup();
+                L.marker(coordinates[coordinates.length - 1]).addTo(map).bindPopup('Destination').openPopup();
             }
         }
 
@@ -40,8 +41,8 @@ const TripMap = ({ routeData }) => {
     }, [routeData]);
 
     return (
-        <div>
-            <div id="map" style={{ height: '600px', width: '100%' }}></div>
+        <div style={{ width: '100%', height: '100%' }}>
+            <div id="map" style={{ height: '100%', width: '100%', minHeight: '500px' }}></div>
         </div>
     );
 };
