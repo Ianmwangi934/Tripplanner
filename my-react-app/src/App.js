@@ -1,13 +1,20 @@
-import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import Register from "./components/Register";
+import Login from "./components/Login";
+import Logout from "./components/Logout";
 import TripForm from "./components/TripForm";
-import './App.css';
 
 function App() {
   return (
-    <div className="App">
-      <h1 className="text-3xl font-bold text-center mb-6">Trip Planner</h1>
-      <TripForm />
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Navigate to="/register" />} />  {/* Default route */}
+        <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/logout" element={<Logout />} />
+        <Route path="/trip-form" element={<TripForm />} />
+      </Routes>
+    </Router>
   );
 }
 

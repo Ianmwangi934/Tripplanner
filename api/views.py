@@ -6,13 +6,18 @@ from io import BytesIO
 from django.http import JsonResponse
 from django.conf import settings
 from django.core.files.base import ContentFile
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .models import GeneratedLog, TripLog
 from django.views import View
 from openrouteservice import convert
+from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth.models import User
+from django.contrib import messages
+import json
+from django.views.decorators.csrf import csrf_exempt
 
 class RouteAPIView(APIView):
     def post(self, request):
@@ -138,3 +143,71 @@ class RouteAPIView(APIView):
 class MapView(View):
     def get(self, request):
         return render(request, 'api/map.html', {'map_api_key': settings.ORS_API_KEY})
+
+@csrf_exempt
+def Register_view(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body.decode("utf-8"))  # Parse JSON from React request
+            
+            username = data.get("username")
+            email = data.get("email")
+            password = data.get("password")
+            confirm_password = data.get("confirm_password")
+
+            if not username or not email or not password or not confirm_password:
+                return JsonResponse({"error": "All fields are required."}, status=400)
+
+            if password != confirm_password:
+                return JsonResponse({"error": "Passwords do not match."}, status=400)
+
+            if User.objects.filter(username=username).exists():
+                return JsonResponse({"error": "Username already taken."}, status=400)
+
+            if User.objects.filter(email=email).exists():
+                return JsonResponse({"error": "Email already registered."}, status=400)
+
+            # Create user
+            user = User.objects.create_user(username=username, email=email, password=password)
+            user.save()
+
+            return JsonResponse({"message": "Registration successful. Please login."}, status=201)
+        
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON data."}, status=400)
+
+    return JsonResponse({"error": "Invalid request method."}, status=405)
+    
+
+@csrf_exempt
+def LoginView(request):
+    if request.method == "POST":
+        try:
+            # Parse JSON data from React request
+            data = json.loads(request.body.decode("utf-8"))
+            username = data.get("username")
+            password = data.get("password")
+
+            user = authenticate(request, username=username, password=password)
+
+            if user:
+                login(request, user)
+                return JsonResponse({"message": "Login successful."}, status=200)
+            else:
+                return JsonResponse({"error": "Invalid Username or Password"}, status=400)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON data."}, status=400)
+
+    # If method is not POST, return an error
+    return JsonResponse({"error": "Invalid request method."}, status=405)
+
+@csrf_exempt
+def LogoutView(request):
+    if request.method == "POST":
+        logout(request)
+        return JsonResponse({"message": "Logout successful."}, status=200)
+
+    return JsonResponse({"error": "Invalid request method."}, status=405)
+
+    
