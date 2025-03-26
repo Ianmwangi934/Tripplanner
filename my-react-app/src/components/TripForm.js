@@ -3,7 +3,7 @@ import axios from "axios";
 import TripMap from "./TripMap";
 import { fabric } from "fabric";
 import "../styles.css";
-
+const API_BASE_URL = process.env.REACT_APP_API_URL;
 const activityColors = {
     "Off-Duty": "red",
     "On-Duty (Not Driving)": "yellow",
@@ -40,7 +40,7 @@ const TripForm = () => {
         setLoading(true);
 
         try {
-            const response = await axios.post("https://tripplanner-2.onrender.com/api/route/", formData);
+            const response = await axios.post(`${API_BASE_URL}/api/route/`, formData);
             console.log("API Response:", response.data);
 
             if (response.data.geometry && response.data.geometry.coordinates) {

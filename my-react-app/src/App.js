@@ -4,6 +4,7 @@ import Login from "./components/Login";
 import Logout from "./components/Logout";
 import TripForm from "./components/TripForm";
 
+const backendURL = process.env.REACT_APP_BACKEND_URL;
 function App() {
   return (
     <Router>
