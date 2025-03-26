@@ -40,7 +40,7 @@ const TripForm = () => {
         setLoading(true);
 
         try {
-            const response = await axios.post("http://127.0.0.1:8000/api/route/", formData);
+            const response = await axios.post("https://tripplanner-2.onrender.com/api/route/", formData);
             console.log("API Response:", response.data);
 
             if (response.data.geometry && response.data.geometry.coordinates) {
