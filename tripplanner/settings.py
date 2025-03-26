@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-lm&6o^-5qudk38@c42oaxw#xmy*=exs0hr@qd%iqx*alsbzp$%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["api.onrender.com"]
 
 
 # Application definition
@@ -58,6 +58,8 @@ MIDDLEWARE = [
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 ROOT_URLCONF = 'tripplanner.urls'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 
 TEMPLATES = [
     {
