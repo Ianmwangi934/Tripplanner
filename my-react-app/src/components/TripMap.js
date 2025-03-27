@@ -10,7 +10,12 @@ const TripMap = ({ routeData }) => {
         if (!mapContainerRef.current) return;
 
         if (!mapRef.current) {
-            mapRef.current = L.map(mapContainerRef.current, { zoomControl: true });
+            // Initialize Leaflet map
+            mapRef.current = L.map(mapContainerRef.current, {
+                zoomControl: true,
+                center: [0, 0], // Default center
+                zoom: 2, // Default zoom level
+            });
 
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                 maxZoom: 18,
@@ -20,26 +25,25 @@ const TripMap = ({ routeData }) => {
 
         if (routeData?.geometry?.coordinates) {
             const coordinates = routeData.geometry.coordinates.map((coord) => [
-                coord[1],
-                coord[0],
+                coord[1], coord[0]
             ]);
             const bounds = L.latLngBounds(coordinates);
             mapRef.current.fitBounds(bounds);
 
-            // Fix for map not fitting properly inside the frame
+            // Ensure map resizes properly
             setTimeout(() => {
                 mapRef.current.invalidateSize();
             }, 500);
 
-            // Remove previous route layers before adding new ones
+            // Remove existing polylines and markers
             mapRef.current.eachLayer((layer) => {
                 if (layer instanceof L.Polyline || layer instanceof L.Marker) {
                     mapRef.current.removeLayer(layer);
                 }
             });
 
-            // Draw polyline
-            L.polyline(coordinates, { color: "blue" }).addTo(mapRef.current);
+            // Draw route polyline
+            L.polyline(coordinates, { color: "blue", weight: 4 }).addTo(mapRef.current);
 
             // Add start and end markers
             if (coordinates.length > 0) {
@@ -55,8 +59,19 @@ const TripMap = ({ routeData }) => {
             }
         }
 
+        // Resize map when the window resizes
+        const handleResize = () => {
+            setTimeout(() => {
+                mapRef.current.invalidateSize();
+            }, 500);
+        };
+
+        window.addEventListener("resize", handleResize);
+        handleResize();
+
         // Cleanup function
         return () => {
+            window.removeEventListener("resize", handleResize);
             if (mapRef.current) {
                 mapRef.current.remove();
                 mapRef.current = null;
@@ -69,7 +84,12 @@ const TripMap = ({ routeData }) => {
             <div
                 ref={mapContainerRef}
                 id="map"
-                style={{ width: "100%", height: "100%", borderRadius: "8px" }}
+                style={{
+                    width: "100%",
+                    height: "100%",
+                    borderRadius: "8px",
+                    minHeight: "400px", // Ensure a minimum height
+                }}
             ></div>
         </div>
     );
