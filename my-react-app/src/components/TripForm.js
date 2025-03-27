@@ -3,7 +3,7 @@ import axios from "axios";
 import TripMap from "./TripMap";
 import { fabric } from "fabric";
 import "../styles.css";
-const API_BASE_URL = process.env.REACT_APP_API_URL;
+
 const activityColors = {
     "Off-Duty": "red",
     "On-Duty (Not Driving)": "yellow",
@@ -15,6 +15,7 @@ const TripForm = () => {
     useEffect(() => {
         document.title = "Trip Planner | Route Management";
     }, []);
+
     const [formData, setFormData] = useState({
         current_location: "",
         pickup_location: "",
@@ -108,7 +109,6 @@ const TripForm = () => {
                 canvasRefs.current[index] = fabricCanvas;
             };
         });
-        
 
         return () => {
             canvasRefs.current.forEach((fabricCanvas) => {
@@ -120,10 +120,8 @@ const TripForm = () => {
     }, [logSheets]);
 
     return (
-        
         <div className="container">
-            {/* Page Title */}
-      <h1 style={{ textAlign: "center", marginBottom: "20px" }}>Trip Planner</h1>
+            <h1 style={{ textAlign: "center", marginBottom: "20px" }}>Trip Planner</h1>
             <form className="trip-form" onSubmit={handleSubmit}>
                 <div className="form-group">
                     <label>Current Location:</label>
@@ -145,36 +143,6 @@ const TripForm = () => {
             {error && <div className="error-message">{error}</div>}
 
             {routeData && <div className="map-container"><TripMap routeData={routeData} /></div>}
-
-            {logSheets.length > 0 && (
-                <div className="eld-log-container">
-                    <h3>Generated ELD Logs:</h3>
-                    <div className="activity-selector">
-                        <label>Activity:</label>
-                        <select onChange={handleActivityChange} value={selectedActivity}>
-                            {Object.keys(activityColors).map((activity) => (
-                                <option key={activity} value={activity}>
-                                    {activity}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    {logSheets.map((url, index) => (
-                        <div key={index} className="eld-log-sheet" style={{ position: 'relative' }}>
-                            <canvas 
-                                id={`canvas-${index}`} 
-                                style={{ 
-                                    position: 'absolute', 
-                                    left: 0, 
-                                    top: 0, 
-                                    zIndex: 2,
-                                    border: "2px solid black"
-                                }}
-                            />
-                        </div>
-                    ))}
-                </div>
-            )}
         </div>
     );
 };

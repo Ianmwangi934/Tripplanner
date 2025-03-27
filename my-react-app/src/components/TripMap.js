@@ -10,7 +10,7 @@ const TripMap = ({ routeData }) => {
         if (!mapContainerRef.current) return;
 
         if (!mapRef.current) {
-            // Initialize Leaflet map
+            // Initialize Leaflet map inside the container
             mapRef.current = L.map(mapContainerRef.current, {
                 zoomControl: true,
                 center: [0, 0], // Default center
@@ -24,25 +24,23 @@ const TripMap = ({ routeData }) => {
         }
 
         if (routeData?.geometry?.coordinates) {
-            const coordinates = routeData.geometry.coordinates.map((coord) => [
-                coord[1], coord[0]
-            ]);
+            const coordinates = routeData.geometry.coordinates.map(coord => [coord[1], coord[0]]);
             const bounds = L.latLngBounds(coordinates);
-            mapRef.current.fitBounds(bounds);
+            mapRef.current.fitBounds(bounds, { padding: [20, 20] });
 
-            // Ensure map resizes properly
+            // Force map to resize properly
             setTimeout(() => {
                 mapRef.current.invalidateSize();
             }, 500);
 
-            // Remove existing polylines and markers
-            mapRef.current.eachLayer((layer) => {
+            // Remove existing polylines and markers before adding new ones
+            mapRef.current.eachLayer(layer => {
                 if (layer instanceof L.Polyline || layer instanceof L.Marker) {
                     mapRef.current.removeLayer(layer);
                 }
             });
 
-            // Draw route polyline
+            // Draw the route polyline
             L.polyline(coordinates, { color: "blue", weight: 4 }).addTo(mapRef.current);
 
             // Add start and end markers
@@ -59,7 +57,7 @@ const TripMap = ({ routeData }) => {
             }
         }
 
-        // Resize map when the window resizes
+        // Handle map resizing on window resize
         const handleResize = () => {
             setTimeout(() => {
                 mapRef.current.invalidateSize();
@@ -80,17 +78,8 @@ const TripMap = ({ routeData }) => {
     }, [routeData]);
 
     return (
-        <div style={{ width: "100%", height: "500px", marginTop: "20px" }}>
-            <div
-                ref={mapContainerRef}
-                id="map"
-                style={{
-                    width: "100%",
-                    height: "100%",
-                    borderRadius: "8px",
-                    minHeight: "400px", // Ensure a minimum height
-                }}
-            ></div>
+        <div className="map-wrapper">
+            <div ref={mapContainerRef} id="map"></div>
         </div>
     );
 };
