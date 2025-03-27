@@ -3,7 +3,10 @@ import axios from "axios";
 import TripMap from "./TripMap";
 import { fabric } from "fabric";
 import "../styles.css";
+
 const API_BASE_URL = process.env.REACT_APP_API_URL;
+
+// Define activity colors
 const activityColors = {
     "Off-Duty": "red",
     "On-Duty (Not Driving)": "yellow",
@@ -12,26 +15,34 @@ const activityColors = {
 };
 
 const TripForm = () => {
+    // Set page title on mount
     useEffect(() => {
         document.title = "Trip Planner | Route Management";
     }, []);
+
+    // State for form inputs
     const [formData, setFormData] = useState({
         current_location: "",
         pickup_location: "",
         dropoff_location: "",
     });
 
+    // State for API responses
     const [routeData, setRouteData] = useState(null);
     const [logSheets, setLogSheets] = useState([]);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
+
+    // State for activity selection
     const [selectedActivity, setSelectedActivity] = useState("Off-Duty");
     const canvasRefs = useRef([]);
 
+    // Handle input changes
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
@@ -40,16 +51,16 @@ const TripForm = () => {
         setLoading(true);
 
         try {
-            const response = await axios.post("https://tripplanner-2.onrender.com/api/route/", formData);
+            const response = await axios.post(`${API_BASE_URL}/api/route/`, formData);
             console.log("API Response:", response.data);
 
-            if (response.data.geometry && response.data.geometry.coordinates) {
+            if (response.data.geometry?.coordinates) {
                 setRouteData(response.data);
             } else {
                 setError("Failed to load route data. Please try again.");
             }
 
-            if (response.data.image_urls && response.data.image_urls.length > 0) {
+            if (response.data.image_urls?.length > 0) {
                 setLogSheets(response.data.image_urls);
             }
         } catch (error) {
@@ -60,6 +71,7 @@ const TripForm = () => {
         }
     };
 
+    // Handle activity selection change
     const handleActivityChange = (event) => {
         setSelectedActivity(event.target.value);
         canvasRefs.current.forEach(canvas => {
@@ -69,6 +81,7 @@ const TripForm = () => {
         });
     };
 
+    // Initialize Fabric.js for log sheets
     useEffect(() => {
         canvasRefs.current = canvasRefs.current.slice(0, logSheets.length);
         
@@ -81,14 +94,10 @@ const TripForm = () => {
                 const canvasElement = document.getElementById(canvasId);
                 if (!canvasElement) return;
 
-                // Dispose previous canvas instance
+                // Dispose previous canvas instance if exists
                 if (canvasRefs.current[index]) {
                     canvasRefs.current[index].dispose();
                 }
-
-                // Set canvas size to match the image
-                canvasElement.width = imageElement.naturalWidth;
-                canvasElement.height = imageElement.naturalHeight;
 
                 // Create a new Fabric.js canvas
                 const fabricCanvas = new fabric.Canvas(canvasId, {
@@ -108,7 +117,6 @@ const TripForm = () => {
                 canvasRefs.current[index] = fabricCanvas;
             };
         });
-        
 
         return () => {
             canvasRefs.current.forEach((fabricCanvas) => {
@@ -119,11 +127,27 @@ const TripForm = () => {
         };
     }, [logSheets]);
 
+    // Handle responsive layout adjustments
+    useEffect(() => {
+        const adjustLayout = () => {
+            const screenWidth = window.innerWidth;
+            if (screenWidth < 768) {
+                console.log("Switching to mobile layout");
+            }
+        };
+
+        window.addEventListener("resize", adjustLayout);
+        adjustLayout(); // Run on mount
+
+        return () => window.removeEventListener("resize", adjustLayout);
+    }, []);
+
     return (
-        
         <div className="container">
             {/* Page Title */}
-      <h1 style={{ textAlign: "center", marginBottom: "20px" }}>Trip Planner</h1>
+            <h1 style={{ textAlign: "center", marginBottom: "20px" }}>Trip Planner</h1>
+
+            {/* Trip Input Form */}
             <form className="trip-form" onSubmit={handleSubmit}>
                 <div className="form-group">
                     <label>Current Location:</label>
@@ -142,13 +166,18 @@ const TripForm = () => {
                 </button>
             </form>
 
+            {/* Error Message */}
             {error && <div className="error-message">{error}</div>}
 
+            {/* Display Map if Route Data Exists */}
             {routeData && <div className="map-container"><TripMap routeData={routeData} /></div>}
 
+            {/* ELD Logs Section */}
             {logSheets.length > 0 && (
                 <div className="eld-log-container">
                     <h3>Generated ELD Logs:</h3>
+                    
+                    {/* Activity Selector */}
                     <div className="activity-selector">
                         <label>Activity:</label>
                         <select onChange={handleActivityChange} value={selectedActivity}>
@@ -159,6 +188,8 @@ const TripForm = () => {
                             ))}
                         </select>
                     </div>
+
+                    {/* Display Canvas for Log Sheets */}
                     {logSheets.map((url, index) => (
                         <div key={index} className="eld-log-sheet" style={{ position: 'relative' }}>
                             <canvas 
