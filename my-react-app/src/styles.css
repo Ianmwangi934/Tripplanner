@@ -71,7 +71,6 @@ button:hover {
     overflow: hidden;
     border: 2px solid #ddd;
     margin-bottom: 10px;
-    min-height: 500px;
 }
 
 /* ELD Log Sheet Styling */
