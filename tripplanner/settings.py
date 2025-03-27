@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-lm&6o^-5qudk38@c42oaxw#xmy*=exs0hr@qd%iqx*alsbzp$%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS =os.getenv("DJANGO_ALLOWED_HOSTS","127.0.0.1,localhost,https://tripplanner-eight.vercel.app").split(",")
+ALLOWED_HOSTS =os.getenv("DJANGO_ALLOWED_HOSTS","127.0.0.1,localhost,https://tripplanner-2.onrender.com,https://tripplanner-eight.vercel.app").split(",")
 
 
 # Application definition
