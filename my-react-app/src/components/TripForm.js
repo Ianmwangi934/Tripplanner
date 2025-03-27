@@ -6,7 +6,6 @@ import "../styles.css";
 
 const API_BASE_URL = process.env.REACT_APP_API_URL;
 
-// Define activity colors
 const activityColors = {
     "Off-Duty": "red",
     "On-Duty (Not Driving)": "yellow",
@@ -15,34 +14,29 @@ const activityColors = {
 };
 
 const TripForm = () => {
-    // Set page title on mount
     useEffect(() => {
         document.title = "Trip Planner | Route Management";
     }, []);
 
-    // State for form inputs
     const [formData, setFormData] = useState({
         current_location: "",
         pickup_location: "",
         dropoff_location: "",
     });
 
-    // State for API responses
     const [routeData, setRouteData] = useState(null);
     const [logSheets, setLogSheets] = useState([]);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
-
-    // State for activity selection
     const [selectedActivity, setSelectedActivity] = useState("Off-Duty");
     const canvasRefs = useRef([]);
 
-    // Handle input changes
+    // Handle Input Change
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // Handle form submission
+    // Handle Form Submission
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
@@ -71,7 +65,7 @@ const TripForm = () => {
         }
     };
 
-    // Handle activity selection change
+    // Handle Activity Change
     const handleActivityChange = (event) => {
         setSelectedActivity(event.target.value);
         canvasRefs.current.forEach(canvas => {
@@ -81,10 +75,10 @@ const TripForm = () => {
         });
     };
 
-    // Initialize Fabric.js for log sheets
+    // Initialize Fabric.js for Log Sheets
     useEffect(() => {
         canvasRefs.current = canvasRefs.current.slice(0, logSheets.length);
-        
+
         logSheets.forEach((url, index) => {
             const imageElement = new Image();
             imageElement.src = url;
@@ -94,10 +88,14 @@ const TripForm = () => {
                 const canvasElement = document.getElementById(canvasId);
                 if (!canvasElement) return;
 
-                // Dispose previous canvas instance if exists
+                // Dispose previous canvas instance
                 if (canvasRefs.current[index]) {
                     canvasRefs.current[index].dispose();
                 }
+
+                // Set canvas size to match the image
+                canvasElement.width = imageElement.naturalWidth;
+                canvasElement.height = imageElement.naturalHeight;
 
                 // Create a new Fabric.js canvas
                 const fabricCanvas = new fabric.Canvas(canvasId, {
@@ -127,7 +125,7 @@ const TripForm = () => {
         };
     }, [logSheets]);
 
-    // Handle responsive layout adjustments
+    // Responsive Layout Adjustments
     useEffect(() => {
         const adjustLayout = () => {
             const screenWidth = window.innerWidth;
@@ -144,10 +142,8 @@ const TripForm = () => {
 
     return (
         <div className="container">
-            {/* Page Title */}
             <h1 style={{ textAlign: "center", marginBottom: "20px" }}>Trip Planner</h1>
 
-            {/* Trip Input Form */}
             <form className="trip-form" onSubmit={handleSubmit}>
                 <div className="form-group">
                     <label>Current Location:</label>
@@ -166,18 +162,13 @@ const TripForm = () => {
                 </button>
             </form>
 
-            {/* Error Message */}
             {error && <div className="error-message">{error}</div>}
 
-            {/* Display Map if Route Data Exists */}
             {routeData && <div className="map-container"><TripMap routeData={routeData} /></div>}
 
-            {/* ELD Logs Section */}
             {logSheets.length > 0 && (
                 <div className="eld-log-container">
                     <h3>Generated ELD Logs:</h3>
-                    
-                    {/* Activity Selector */}
                     <div className="activity-selector">
                         <label>Activity:</label>
                         <select onChange={handleActivityChange} value={selectedActivity}>
@@ -188,8 +179,6 @@ const TripForm = () => {
                             ))}
                         </select>
                     </div>
-
-                    {/* Display Canvas for Log Sheets */}
                     {logSheets.map((url, index) => (
                         <div key={index} className="eld-log-sheet" style={{ position: 'relative' }}>
                             <canvas 
