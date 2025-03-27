@@ -28,12 +28,7 @@ SECRET_KEY = 'django-insecure-lm&6o^-5qudk38@c42oaxw#xmy*=exs0hr@qd%iqx*alsbzp$%
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    "127.0.0.1",  # Allow local development
-    "localhost",
-    "tripplanner-eight.vercel.app",  # Allow your deployed frontend
-    ".vercel.app",  # Allow any subdomain of Vercel
-    ".render.com",  # If your backend is on Render
-    "https://tripplanner-git-main-ians-projects-b02c3b04.vercel.app/"
+     "tripplanner-eight.vercel.app"
 ]
 
 
