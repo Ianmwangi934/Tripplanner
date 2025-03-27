@@ -28,7 +28,8 @@ SECRET_KEY = 'django-insecure-lm&6o^-5qudk38@c42oaxw#xmy*=exs0hr@qd%iqx*alsbzp$%
 DEBUG = True
 
 ALLOWED_HOSTS = [
-     "tripplanner-eight.vercel.app"
+     "tripplanner-eight.vercel.app",
+     "https://tripplanner-eight.vercel.app/register"
 ]
 
 
