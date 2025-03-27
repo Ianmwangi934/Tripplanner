@@ -1,46 +1,54 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
-import { MapContainer, TileLayer, Polyline, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
 const TripMap = ({ routeData }) => {
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [coordinates, setCoordinates] = useState(null);
+    const mapRef = useRef(null);
+    const mapContainerRef = useRef(null); // Reference to the map container
 
     useEffect(() => {
-        if (!routeData?.geometry?.coordinates) {
-            console.error('Coordinates are not available.');
-            setError('Failed to load route data. Please try again.');
-            setLoading(false);
-            return;
+        if (!mapContainerRef.current) return; // Ensure container exists
+
+        if (!mapRef.current) {
+            mapRef.current = L.map(mapContainerRef.current, { zoomControl: true });
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+                attribution: '© OpenStreetMap contributors',
+            }).addTo(mapRef.current);
         }
 
-        try {
-            const coords = routeData.geometry.coordinates.map(coord => [coord[1], coord[0]]);
-            setCoordinates(coords);
-            setLoading(false);
-        } catch (error) {
-            console.error('Error processing coordinates:', error);
-            setError('Error processing coordinates. Please try again.');
-            setLoading(false);
+        if (routeData?.geometry?.coordinates) {
+            const coordinates = routeData.geometry.coordinates.map(coord => [coord[1], coord[0]]);
+            const bounds = L.latLngBounds(coordinates);
+            mapRef.current.fitBounds(bounds);
+
+            requestAnimationFrame(() => {
+                mapRef.current.invalidateSize();
+            });
+
+            // Clear existing layers before adding new ones
+            mapRef.current.eachLayer(layer => {
+                if (layer instanceof L.Polyline || layer instanceof L.Marker) {
+                    mapRef.current.removeLayer(layer);
+                }
+            });
+
+            // Draw polyline
+            L.polyline(coordinates, { color: 'blue' }).addTo(mapRef.current);
+
+            // Add start and end markers
+            if (coordinates.length > 0) {
+                L.marker(coordinates[0]).addTo(mapRef.current).bindPopup('Starting Point').openPopup();
+                L.marker(coordinates[coordinates.length - 1]).addTo(mapRef.current).bindPopup('Destination').openPopup();
+            }
         }
     }, [routeData]);
 
-    if (loading) return <div>Loading map...</div>;
-    if (error) return <div style={{ color: 'red' }}>{error}</div>;
-    if (!coordinates?.length) return <div>No valid route data to display.</div>;
-
-    const startPoint = coordinates[0];
-    const endPoint = coordinates[coordinates.length - 1];
-
     return (
-        <MapContainer center={startPoint} zoom={10} style={{ height: '500px', width: '100%' }}>
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-            <Polyline positions={coordinates} color="blue" />
-            <Marker position={startPoint}><Popup>Start Point</Popup></Marker>
-            <Marker position={endPoint}><Popup>End Point</Popup></Marker>
-        </MapContainer>
+        <div style={{ width: '100%', height: '500px' }}>
+            <div ref={mapContainerRef} id="map" style={{ width: '100%', height: '100%' }}></div>
+        </div>
     );
 };
 

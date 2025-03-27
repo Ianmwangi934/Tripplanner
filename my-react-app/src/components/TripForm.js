@@ -3,9 +3,7 @@ import axios from "axios";
 import TripMap from "./TripMap";
 import { fabric } from "fabric";
 import "../styles.css";
-
 const API_BASE_URL = process.env.REACT_APP_API_URL;
-
 const activityColors = {
     "Off-Duty": "red",
     "On-Duty (Not Driving)": "yellow",
@@ -17,7 +15,6 @@ const TripForm = () => {
     useEffect(() => {
         document.title = "Trip Planner | Route Management";
     }, []);
-
     const [formData, setFormData] = useState({
         current_location: "",
         pickup_location: "",
@@ -31,12 +28,10 @@ const TripForm = () => {
     const [selectedActivity, setSelectedActivity] = useState("Off-Duty");
     const canvasRefs = useRef([]);
 
-    // Handle Input Change
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    // Handle Form Submission
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
@@ -45,16 +40,16 @@ const TripForm = () => {
         setLoading(true);
 
         try {
-            const response = await axios.post(`${API_BASE_URL}/api/route/`, formData);
+            const response = await axios.post("https://tripplanner-2.onrender.com/api/route/", formData);
             console.log("API Response:", response.data);
 
-            if (response.data.geometry?.coordinates) {
+            if (response.data.geometry && response.data.geometry.coordinates) {
                 setRouteData(response.data);
             } else {
                 setError("Failed to load route data. Please try again.");
             }
 
-            if (response.data.image_urls?.length > 0) {
+            if (response.data.image_urls && response.data.image_urls.length > 0) {
                 setLogSheets(response.data.image_urls);
             }
         } catch (error) {
@@ -65,7 +60,6 @@ const TripForm = () => {
         }
     };
 
-    // Handle Activity Change
     const handleActivityChange = (event) => {
         setSelectedActivity(event.target.value);
         canvasRefs.current.forEach(canvas => {
@@ -75,10 +69,9 @@ const TripForm = () => {
         });
     };
 
-    // Initialize Fabric.js for Log Sheets
     useEffect(() => {
         canvasRefs.current = canvasRefs.current.slice(0, logSheets.length);
-
+        
         logSheets.forEach((url, index) => {
             const imageElement = new Image();
             imageElement.src = url;
@@ -115,6 +108,7 @@ const TripForm = () => {
                 canvasRefs.current[index] = fabricCanvas;
             };
         });
+        
 
         return () => {
             canvasRefs.current.forEach((fabricCanvas) => {
@@ -125,25 +119,11 @@ const TripForm = () => {
         };
     }, [logSheets]);
 
-    // Responsive Layout Adjustments
-    useEffect(() => {
-        const adjustLayout = () => {
-            const screenWidth = window.innerWidth;
-            if (screenWidth < 768) {
-                console.log("Switching to mobile layout");
-            }
-        };
-
-        window.addEventListener("resize", adjustLayout);
-        adjustLayout(); // Run on mount
-
-        return () => window.removeEventListener("resize", adjustLayout);
-    }, []);
-
     return (
+        
         <div className="container">
-            <h1 style={{ textAlign: "center", marginBottom: "20px" }}>Trip Planner</h1>
-
+            {/* Page Title */}
+      <h1 style={{ textAlign: "center", marginBottom: "20px" }}>Trip Planner</h1>
             <form className="trip-form" onSubmit={handleSubmit}>
                 <div className="form-group">
                     <label>Current Location:</label>
