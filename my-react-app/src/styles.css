@@ -65,7 +65,7 @@ button:hover {
 /* Map Styling */
 .map-container {
     width: 100%;
-    max-width: 1100px; /* Increased width */
+    max-width: 100%; /* Increased width */
     height: 500px; /* Increased height */
     border-radius: 4px;
     overflow: hidden;
