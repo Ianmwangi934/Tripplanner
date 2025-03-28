@@ -4,17 +4,11 @@ import 'leaflet/dist/leaflet.css';
 
 const TripMap = ({ routeData }) => {
     const mapRef = useRef(null);
-    const mapContainerRef = useRef(null);
+    const mapContainerRef = useRef(null); // Reference to the map container
 
     useEffect(() => {
-        if (!mapContainerRef.current) return;
-
-        if (!mapRef.current) {
-            mapRef.current = L.map(mapContainerRef.current, {
-                zoomControl: true,
-                center: [0, 0], // Default center
-                zoom: 2, // Default zoom level
-            });
+        if (!mapRef.current && mapContainerRef.current) {
+            mapRef.current = L.map(mapContainerRef.current, { zoomControl: true });
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 18,
@@ -22,63 +16,48 @@ const TripMap = ({ routeData }) => {
             }).addTo(mapRef.current);
         }
 
-        if (routeData?.geometry?.coordinates) {
+        if (routeData && routeData.geometry && routeData.geometry.coordinates) {
             const coordinates = routeData.geometry.coordinates.map(coord => [coord[1], coord[0]]);
+
+            // Fit the map to the route
             const bounds = L.latLngBounds(coordinates);
             mapRef.current.fitBounds(bounds);
 
-            // Ensure map resizes properly
+            // Ensure the map resizes properly
             setTimeout(() => {
-                mapRef.current.invalidateSize();
+                if (mapRef.current) {
+                    mapRef.current.invalidateSize();
+                }
             }, 500);
 
-            // Remove existing polylines and markers
-            mapRef.current.eachLayer((layer) => {
-                if (layer instanceof L.Polyline || layer instanceof L.Marker) {
+            // Remove any existing polylines before adding a new one
+            mapRef.current.eachLayer(layer => {
+                if (layer instanceof L.Polyline) {
                     mapRef.current.removeLayer(layer);
                 }
             });
 
-            // Draw route polyline
-            L.polyline(coordinates, { color: 'blue', weight: 4 }).addTo(mapRef.current);
+            // Draw the route as a polyline
+            L.polyline(coordinates, { color: 'blue' }).addTo(mapRef.current);
 
-            // Add start and end markers
+            // Add markers for start and end points
             if (coordinates.length > 0) {
-                L.marker(coordinates[0])
-                    .addTo(mapRef.current)
-                    .bindPopup('Starting Point')
-                    .openPopup();
-
-                L.marker(coordinates[coordinates.length - 1])
-                    .addTo(mapRef.current)
-                    .bindPopup('Destination')
-                    .openPopup();
+                L.marker(coordinates[0]).addTo(mapRef.current).bindPopup('Starting Point').openPopup();
+                L.marker(coordinates[coordinates.length - 1]).addTo(mapRef.current).bindPopup('Destination').openPopup();
             }
         }
 
-        // Resize map when the window resizes
-        const handleResize = () => {
-            setTimeout(() => {
-                mapRef.current.invalidateSize();
-            }, 500);
-        };
-
-        window.addEventListener('resize', handleResize);
-        handleResize();
-
-        // Cleanup function
         return () => {
-            window.removeEventListener('resize', handleResize);
             if (mapRef.current) {
-                mapRef.current.remove();
-                mapRef.current = null;
+                mapRef.current.invalidateSize(); // Ensure resizing is handled
             }
         };
+
     }, [routeData]);
 
     return (
-        <div className="map-wrapper">
-            <div ref={mapContainerRef} id="map"></div>
+        <div style={{ width: '100%', height: '100%' }}>
+            <div ref={mapContainerRef} className="map-container"></div>
         </div>
     );
 };
