@@ -77,17 +77,8 @@ const TripMap = ({ routeData }) => {
     }, [routeData]);
 
     return (
-        <div style={{ width: '100%', height: '500px', marginTop: '20px' }}>
-            <div
-                ref={mapContainerRef}
-                id="map"
-                style={{
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: '8px',
-                    minHeight: '400px', // Ensure a minimum height
-                }}
-            ></div>
+        <div className="map-wrapper">
+            <div ref={mapContainerRef} id="map"></div>
         </div>
     );
 };

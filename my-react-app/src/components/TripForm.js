@@ -3,6 +3,7 @@ import axios from "axios";
 import TripMap from "./TripMap";
 import { fabric } from "fabric";
 import "../styles.css";
+
 const API_BASE_URL = process.env.REACT_APP_API_URL;
 const activityColors = {
     "Off-Duty": "red",
@@ -15,6 +16,7 @@ const TripForm = () => {
     useEffect(() => {
         document.title = "Trip Planner | Route Management";
     }, []);
+
     const [formData, setFormData] = useState({
         current_location: "",
         pickup_location: "",
@@ -41,7 +43,6 @@ const TripForm = () => {
 
         try {
             const response = await axios.post("https://tripplanner-2.onrender.com/api/route/", formData);
-            console.log("API Response:", response.data);
 
             if (response.data.geometry && response.data.geometry.coordinates) {
                 setRouteData(response.data);
@@ -53,7 +54,6 @@ const TripForm = () => {
                 setLogSheets(response.data.image_urls);
             }
         } catch (error) {
-            console.error("Error:", error);
             setError("Something went wrong. Please try again.");
         } finally {
             setLoading(false);
@@ -71,7 +71,7 @@ const TripForm = () => {
 
     useEffect(() => {
         canvasRefs.current = canvasRefs.current.slice(0, logSheets.length);
-        
+
         logSheets.forEach((url, index) => {
             const imageElement = new Image();
             imageElement.src = url;
@@ -81,16 +81,13 @@ const TripForm = () => {
                 const canvasElement = document.getElementById(canvasId);
                 if (!canvasElement) return;
 
-                // Dispose previous canvas instance
                 if (canvasRefs.current[index]) {
                     canvasRefs.current[index].dispose();
                 }
 
-                // Set canvas size to match the image
                 canvasElement.width = imageElement.naturalWidth;
                 canvasElement.height = imageElement.naturalHeight;
 
-                // Create a new Fabric.js canvas
                 const fabricCanvas = new fabric.Canvas(canvasId, {
                     isDrawingMode: true,
                     backgroundColor: "transparent",
@@ -99,7 +96,6 @@ const TripForm = () => {
                 fabricCanvas.freeDrawingBrush.width = 2;
                 fabricCanvas.freeDrawingBrush.color = activityColors[selectedActivity];
 
-                // Set image as background in Fabric.js
                 fabric.Image.fromURL(url, (img) => {
                     img.set({ selectable: false, evented: false });
                     fabricCanvas.setBackgroundImage(img, fabricCanvas.renderAll.bind(fabricCanvas));
@@ -108,7 +104,6 @@ const TripForm = () => {
                 canvasRefs.current[index] = fabricCanvas;
             };
         });
-        
 
         return () => {
             canvasRefs.current.forEach((fabricCanvas) => {
@@ -120,23 +115,18 @@ const TripForm = () => {
     }, [logSheets]);
 
     return (
-        
         <div className="container">
-            {/* Page Title */}
-      <h1 style={{ textAlign: "center", marginBottom: "20px" }}>Trip Planner</h1>
+            <h1 style={{ textAlign: "center", marginBottom: "20px" }}>Trip Planner</h1>
             <form className="trip-form" onSubmit={handleSubmit}>
-                <div className="form-group">
-                    <label>Current Location:</label>
-                    <input type="text" name="current_location" value={formData.current_location} onChange={handleChange} required />
-                </div>
-                <div className="form-group">
-                    <label>Pickup Location:</label>
-                    <input type="text" name="pickup_location" value={formData.pickup_location} onChange={handleChange} required />
-                </div>
-                <div className="form-group">
-                    <label>Dropoff Location:</label>
-                    <input type="text" name="dropoff_location" value={formData.dropoff_location} onChange={handleChange} required />
-                </div>
+                <label>Current Location:</label>
+                <input type="text" name="current_location" value={formData.current_location} onChange={handleChange} required />
+
+                <label>Pickup Location:</label>
+                <input type="text" name="pickup_location" value={formData.pickup_location} onChange={handleChange} required />
+
+                <label>Dropoff Location:</label>
+                <input type="text" name="dropoff_location" value={formData.dropoff_location} onChange={handleChange} required />
+
                 <button type="submit" className="submit-btn" disabled={loading}>
                     {loading ? "Generating Route..." : "Generate Route"}
                 </button>
@@ -144,37 +134,8 @@ const TripForm = () => {
 
             {error && <div className="error-message">{error}</div>}
 
-            {routeData && <div className="map-container"><TripMap routeData={routeData} /></div>}
+            {routeData && <TripMap routeData={routeData} />}
 
-            {logSheets.length > 0 && (
-                <div className="eld-log-container">
-                    <h3>Generated ELD Logs:</h3>
-                    <div className="activity-selector">
-                        <label>Activity:</label>
-                        <select onChange={handleActivityChange} value={selectedActivity}>
-                            {Object.keys(activityColors).map((activity) => (
-                                <option key={activity} value={activity}>
-                                    {activity}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    {logSheets.map((url, index) => (
-                        <div key={index} className="eld-log-sheet" style={{ position: 'relative' }}>
-                            <canvas 
-                                id={`canvas-${index}`} 
-                                style={{ 
-                                    position: 'absolute', 
-                                    left: 0, 
-                                    top: 0, 
-                                    zIndex: 2,
-                                    border: "2px solid black"
-                                }}
-                            />
-                        </div>
-                    ))}
-                </div>
-            )}
         </div>
     );
 };
