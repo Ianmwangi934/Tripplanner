@@ -1,5 +1,7 @@
 The link to the LOOM video of the application: https://youtu.be/fh9-VgRehVM
 
+Loom Video 2: https://youtu.be/x8Ia9XyV8ss
+
 Live Link: https://tripplanner-bljf.vercel.app/
 
 Features
