@@ -1,5 +1,7 @@
 The link to the LOOM video of the application: https://youtu.be/fh9-VgRehVM
 
+Live Link: https://tripplanner-bljf.vercel.app/
+
 Features
 
     User Authentication using Django
