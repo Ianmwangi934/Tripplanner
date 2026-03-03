@@ -8,11 +8,11 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Navigate to="/register" />} />  {/* Default route */}
+        <Route path="/register" element={<Navigate to="/register" />} />  {/* Default route */}
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/logout" element={<Logout />} />
-        <Route path="/trip-form" element={<TripForm />} />
+        <Route path="/" element={<TripForm />} />
       </Routes>
     </Router>
   );

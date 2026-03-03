@@ -31,6 +31,7 @@ class RouteAPIView(APIView):
 
         try:
             ors_api_key = settings.ORS_API_KEY
+            print("ORS KEY:", getattr(settings, "ORS_API_KEY", "NOT FOUND"))
 
             def get_coordinates(location):
                 geocode_url = "https://api.openrouteservice.org/geocode/search"

@@ -4,6 +4,8 @@ import TripMap from "./TripMap";
 import { fabric } from "fabric";
 import "../styles.css";
 
+
+
 const activityColors = {
     "Off-Duty": "red",
     "On-Duty (Not Driving)": "yellow",
@@ -12,6 +14,7 @@ const activityColors = {
 };
 
 const TripForm = () => {
+    
     useEffect(() => {
         document.title = "Trip Planner | Route Management";
     }, []);
@@ -27,6 +30,7 @@ const TripForm = () => {
     const [loading, setLoading] = useState(false);
     const [selectedActivity, setSelectedActivity] = useState("Off-Duty");
     const canvasRefs = useRef([]);
+    const isMountedRef = useRef(true);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -70,54 +74,74 @@ const TripForm = () => {
     };
 
     useEffect(() => {
-        canvasRefs.current = canvasRefs.current.slice(0, logSheets.length);
-        
-        logSheets.forEach((url, index) => {
-            const imageElement = new Image();
-            imageElement.src = url;
+    isMountedRef.current = true;
 
-            imageElement.onload = () => {
-                const canvasId = `canvas-${index}`;
-                const canvasElement = document.getElementById(canvasId);
-                if (!canvasElement) return;
+    canvasRefs.current = canvasRefs.current.slice(0, logSheets.length);
 
-                // Dispose previous canvas instance
-                if (canvasRefs.current[index]) {
+    logSheets.forEach((url, index) => {
+        const imageElement = new Image();
+        imageElement.src = url;
+
+        imageElement.onload = () => {
+            if (!isMountedRef.current) return;
+
+            const canvasId = `canvas-${index}`;
+            const canvasElement = document.getElementById(canvasId);
+            if (!canvasElement) return;
+
+            // Dispose safely
+            if (canvasRefs.current[index]) {
+                try {
                     canvasRefs.current[index].dispose();
+                } catch (err) {
+                    console.warn(err);
                 }
+            }
 
-                // Set canvas size to match the image
-                canvasElement.width = imageElement.naturalWidth;
-                canvasElement.height = imageElement.naturalHeight;
+            canvasElement.width = imageElement.naturalWidth;
+            canvasElement.height = imageElement.naturalHeight;
 
-                // Create a new Fabric.js canvas
-                const fabricCanvas = new fabric.Canvas(canvasId, {
-                    isDrawingMode: true,
-                    backgroundColor: "transparent",
-                });
-
-                fabricCanvas.freeDrawingBrush.width = 2;
-                fabricCanvas.freeDrawingBrush.color = activityColors[selectedActivity];
-
-                // Set image as background in Fabric.js
-                fabric.Image.fromURL(url, (img) => {
-                    img.set({ selectable: false, evented: false });
-                    fabricCanvas.setBackgroundImage(img, fabricCanvas.renderAll.bind(fabricCanvas));
-                });
-
-                canvasRefs.current[index] = fabricCanvas;
-            };
-        });
-        
-
-        return () => {
-            canvasRefs.current.forEach((fabricCanvas) => {
-                if (fabricCanvas) {
-                    fabricCanvas.dispose();
-                }
+            const fabricCanvas = new fabric.Canvas(canvasId, {
+                isDrawingMode: true,
+                backgroundColor: "transparent",
             });
+
+            fabricCanvas.freeDrawingBrush.width = 2;
+            fabricCanvas.freeDrawingBrush.color =
+                activityColors[selectedActivity];
+
+            fabric.Image.fromURL(url, (img) => {
+                if (!isMountedRef.current) return;
+
+                img.set({
+                    selectable: false,
+                    evented: false,
+                });
+
+                fabricCanvas.setBackgroundImage(
+                    img,
+                    fabricCanvas.renderAll.bind(fabricCanvas)
+                );
+            });
+
+            canvasRefs.current[index] = fabricCanvas;
         };
-    }, [logSheets]);
+    });
+
+    return () => {
+        isMountedRef.current = false;
+
+        canvasRefs.current.forEach((fabricCanvas) => {
+            if (fabricCanvas) {
+                try {
+                    fabricCanvas.dispose();
+                } catch (err) {
+                    console.warn(err);
+                }
+            }
+        });
+    };
+}, [logSheets, selectedActivity]);
 
     return (
         
