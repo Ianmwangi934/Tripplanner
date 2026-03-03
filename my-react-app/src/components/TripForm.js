@@ -141,7 +141,7 @@ const TripForm = () => {
             }
         });
     };
-}, [logSheets, selectedActivity]);s
+}, [logSheets, selectedActivity]);
 
     return (
         
