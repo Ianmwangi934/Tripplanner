@@ -37,13 +37,22 @@ class RouteAPIView(APIView):
             def get_coordinates(location):
                 geocode_url = "https://api.openrouteservice.org/geocode/search"
                 headers = {'Authorization': ors_api_key}
-                params = {'text': location, 'size': 1}
-
+                params = {
+                    'text': location,
+                    'size': 1,
+                    'boundary.country': 'US'
+                }
+            
                 response = requests.get(geocode_url, headers=headers, params=params)
                 response_data = response.json()
-
-                if response_data['features']:
-                    return response_data['features'][0]['geometry']['coordinates']
+            
+                print("GEOCODE RESPONSE:", response_data)
+            
+                if isinstance(response_data, dict):
+                    features = response_data.get("features", [])
+                    if features:
+                        return features[0]["geometry"]["coordinates"]
+            
                 return None
 
             current_coords = get_coordinates(current_location)
@@ -69,17 +78,26 @@ class RouteAPIView(APIView):
 
             route_data = route_response.json()
 
-            # Extract route geometry
-            try:
-                route_info = route_data['routes'][0]
-                if isinstance(route_info, dict) and 'geometry' in route_info:
-                    route_geometry = route_info['geometry']
-                    coordinates = convert.decode_polyline(route_geometry)['coordinates']
-                else:
-                    return Response({"error": "Invalid 'routes' format or 'geometry' not found"}, status=status.HTTP_400_BAD_REQUEST)
-
-            except Exception as e:
-                return Response({"error": f"Error processing route information: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            # Extract route geometry safely
+            if not route_data.get("routes"):
+                print("ROUTE API ERROR:", route_data)
+                return Response(
+                    {"error": "Route calculation failed", "details": route_data},
+                    status=400
+                )
+            
+            route_info = route_data["routes"][0]
+            route_geometry = route_info.get("geometry")
+            
+            if not route_geometry:
+                print("Route geometry missing:", route_info)
+                return Response(
+                    {"error": "Route geometry missing"},
+                    status=400
+                )
+            
+            decoded = convert.decode_polyline(route_geometry)
+            coordinates = decoded.get("coordinates", [])
 
             # Extract distance
             try:
