@@ -18,6 +18,7 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 import json
 from django.views.decorators.csrf import csrf_exempt
+import base64
 
 class RouteAPIView(APIView):
     def post(self, request):
@@ -124,12 +125,10 @@ class RouteAPIView(APIView):
                 plt.close()
                 buffer.seek(0)
 
-                log_image = GeneratedLog()
-                log_image.image.save(f'eld_log_day_{day + 1}.png', ContentFile(buffer.read()))
-                log_image.save()
+                
 
-                log_images.append(request.build_absolute_uri(log_image.image.url))
-
+                image_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+                log_images.append(f"data:image/png;base64,{image_base64}")
             return Response({
                 "image_urls": log_images,
                 "geometry": {
