@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-lm&6o^-5qudk38@c42oaxw#xmy*=exs0hr@qd%iqx*alsbzp$%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["tripplanner-3.onrender.com","127.0.0.1", "localhost", ""tripplanner-bljf.vercel.app""]
+ALLOWED_HOSTS = ["tripplanner-3.onrender.com","127.0.0.1", "localhost", "tripplanner-bljf.vercel.app"]
 
 
 # Application definition
