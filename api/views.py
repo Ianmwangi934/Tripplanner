@@ -49,6 +49,7 @@ class RouteAPIView(APIView):
             current_coords = get_coordinates(current_location)
             pickup_coords = get_coordinates(pickup_location)
             dropoff_coords = get_coordinates(dropoff_location)
+            
 
             if not all([current_coords, pickup_coords, dropoff_coords]):
                 return Response({"error": "Failed to get coordinates for one or more locations"}, status=status.HTTP_400_BAD_REQUEST)
